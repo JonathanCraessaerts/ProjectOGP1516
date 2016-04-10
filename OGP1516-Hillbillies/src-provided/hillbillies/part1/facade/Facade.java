@@ -12,20 +12,6 @@ public class Facade implements IFacade {
 	@Override
 	public Unit createUnit(String name, int[] initialPosition, int weight, int agility, int strength, int toughness,
 			boolean enableDefaultBehavior) throws ModelException {
-		Random rand = new Random();
-		if (agility < Unit.minInitAgility || agility > Unit.maxInitAgility){
-			int a = rand.nextInt(Unit.maxInitAgility - Unit.minInitAgility) + Unit.minInitAgility;
-			agility = a;
-		}
-		if (strength < Unit.minInitStrength || strength > Unit.maxInitStrength){
-			int a = rand.nextInt(Unit.maxInitStrength - Unit.minInitStrength) + Unit.minInitStrength;
-			strength = a;
-		}
-		if (toughness < Unit.minInitThoughness || toughness > Unit.maxInitThoughness){
-			int a = rand.nextInt(Unit.maxInitThoughness - Unit.minInitThoughness) + Unit.minInitThoughness;
-			toughness = a;
-		}
-		
 		Unit unit = new Unit(name, initialPosition, weight, agility, toughness, toughness, enableDefaultBehavior);
 		return unit;
 	}

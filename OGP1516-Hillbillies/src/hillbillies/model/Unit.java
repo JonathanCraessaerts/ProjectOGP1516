@@ -1,10 +1,18 @@
 package hillbillies.model;
 
+
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 import be.kuleuven.cs.som.annotate.Basic;
-import be.kuleuven.cs.som.annotate.Immutable;
+
 import be.kuleuven.cs.som.annotate.Raw;
+
+import ogp.framework.util.Util;
 
 
 
@@ -153,23 +161,31 @@ public class Unit {
 public Unit(String Name, int[] Position, int Weight, 
 		int Agility,  int Strength, int Toughness, boolean enableDefaultBehaviour) 
 				throws IllegalArgumentException {
-	initialPosition = Position;
+	double x = (Position[0]);
+	double y = (Position[1]);
+	double z = (Position[2]);
+	double[] p = {x,y,z};
+	if (! canHaveAsPoistion(p))
+		Fall();
+	setPosition(p);
 	this.setName(Name);
 	Random rand = new Random();
-	if (! isValidStength(Strength))
+	if (! isValidInitStength(Strength))
 		Strength = rand.nextInt(maxInitStrength - minInitStrength) + minInitStrength;
 	setStength(Strength);
-	if (! isValidAgility(Agility))
+	if (! isValidInitAgility(Agility))
 		Agility = rand.nextInt(maxInitAgility - minInitAgility) + minInitAgility;
 	setAgility(Agility);
-	if (! isValidToughness(Toughness))
+	if (! isValidInitThoughness(Toughness))
 		Toughness = rand.nextInt(maxInitThoughness - minInitThoughness) 
 		+ minInitThoughness;
 	setToughness(Toughness);
-	if (! isValidWeight(Weight))
+	if (! isValidInitWeight(Weight))
 		Weight = rand.nextInt(maxInitWeight - minInitWeight) 
 		+ minInitWeight;
 	setWeight(Weight);
+	if (enableDefaultBehaviour == true)
+		startDefaultBehaviour(enableDefaultBehaviour);
 }
 
 
@@ -209,18 +225,44 @@ public long[] getOccupiedGameCube(double[] Position){
 }
 
 /**
+ * Set the Position of this Unit to the given Position.
+ * 
+ * @param  Position
+ *         The new Position for this Unit.
+ * @post   The Position of this new Unit is equal to
+ *         the given Position.
+ *       | new.getPosition() == Position
+ * @throws IllegalArgumentException
+ *         The given Position is not a valid Position for any
+ *         Unit.
+ *       | ! canHaveAsPosition(getPosition())
+ */
+@Raw
+public void setPosition(double[] position) 
+		throws IllegalArgumentException {
+	if (! canHaveAsPoistion(position))
+		throw new IllegalArgumentException("A Unit can not have this position");
+	this.Position = position;
+}
+
+/**
  * Check whether this Unit can have the given Position as its Position.
  *  
  * @param  Position
  *         The Position to check.
  * @return 
  *       | (0 < Xpos < maxX - 1) && (0 < Ypos < maxY-1) && (0 < Zpos < maxZ-1)
+ *       | && world.isPassable(x, y, z);
 */
 @Raw
 public boolean canHaveAsPoistion(double[] Position) {
+	int x = (int) Math.floor(Position[0]);
+	int y = (int) Math.floor(Position[1]);
+	int z = (int) Math.floor(Position[2]);
 	return (Position[0] >= 0) && (Position[0] <= maxX - 1) 
 			&& (Position[1] >= 0) && (Position[1] <= maxY - 1)
-			&& (Position[2] >= 0) && (Position[2] <= maxZ - 1);
+			&& (Position[2] >= 0) && (Position[2] <= maxZ - 1)
+			&& world.isPassable(x, y, z);
 	
 }
 
@@ -228,7 +270,7 @@ public boolean canHaveAsPoistion(double[] Position) {
  * Variable registering the Position of this Unit.
  */
 
-private int[] initialPosition ;
+static int[] initialPosition ;
 private double Xpos;
 private double Ypos;
 private double Zpos;
@@ -310,7 +352,61 @@ private String Name;
 
 // ==========WEIGTH, STRENGTH, AGILITY, THOUGHNESS=======
 
+/**
+ * Check whether the given Strength is a valid Initial Strength for
+ * any Unit.
+ *  
+ * @param  Strength
+ *         The Strength to check.
+ * @return 
+ *       | return (minInitStrength <= Strength) && (Strength <= maxInitStrength)
+*/
+public boolean isValidInitStength(int Strength) {
+	return (minInitStrength <= Strength) && (Strength <= maxInitStrength);
+	
+}
+/**
+ * Check whether the given Strength is a valid Initial Strength for
+ * any Unit.
+ *  
+ * @param  Strength
+ *         The Strength to check.
+ * @return 
+ *       | return (minInitAgility <= Agility) && (Agility <= maxInitAgility)
+*/
+public boolean isValidInitAgility(int Agility) {
+	return (minInitAgility <= Agility) && (Agility <= maxInitAgility);
+	
+}
 
+/**
+ * Check whether the given Strength is a valid Initial Strength for
+ * any Unit.
+ *  
+ * @param  Strength
+ *         The Strength to check.
+ * @return 
+ *       | return (minInitThoughness <= Thoughness) && (Thoughness <= maxInitThoughness)
+*/
+public boolean isValidInitThoughness(int Thoughness) {
+	return (minInitThoughness <= Thoughness) && (Thoughness <= maxInitThoughness);
+	
+}
+
+
+/**
+ * Check whether the given Strength is a valid Initial Strength for
+ * any Unit.
+ *  
+ * @param  Strength
+ *         The Strength to check.
+ * @return 
+ *       | return (minInitWeight <= Weight) && (Weight <= maxInitWeight)
+*/
+public boolean isValidInitWeight(int Weight) {
+	return (minInitWeight <= Weight) && (Weight <= maxInitWeight);
+	
+}
 
 /**
  * Cte for the min and max init Strength, Agility, Toughness and Weight
@@ -527,7 +623,8 @@ private int maxWeight = 200;
 
 public int MinWeight(){
 	 int minWeight = ((getAgility() + getStength())/2);
-	 return this.minWeight = minWeight;
+	 this.minWeight = minWeight;
+	 return this.minWeight;
 }
 
 
@@ -661,14 +758,15 @@ private int maxStam;
 private int maxHP;
 public int maxHP(){
 	int maxHP = Math.round(200 * (getWeight()/100) * (getToughness()/100));
-	return this.maxHP = maxHP;
+	 this.maxHP = maxHP;
+	 return this.maxHP;
 }
 
 public int maxStamina(){
 	 int maxStam = Math.round(200 * (getWeight()/100) * (getToughness()/100));
-	 return this.maxStam = maxStam;
+	  this.maxStam = maxStam;
+	  return this.maxStam;
 }
-
 
 
 
@@ -685,8 +783,7 @@ public int maxStamina(){
  *       |   then new.getOrientation() == Orientation
  *       |   else new.getOrientation() == PI/2
  */
-public Unit(float Orientation, double[] newPosition, 
-		String Speed) {
+public Unit(float Orientation, double[] newPosition) {
 		Orientation = (float) (Math.PI/2);
 	
 	setOrientation(Orientation);
@@ -728,13 +825,13 @@ private float Orientation;
 /**
  * Var + method for the base speed of a Unit
  */
-
 private double Vb;
 
 public double Vb(){
 	 double baseSpeed = 1.5 * ((getStength() + getAgility())/
 			 (200*((getWeight()/100))));
-	 return this.Vb = baseSpeed;
+	this.Vb = baseSpeed;
+	 return this.Vb;
 }
 
 /**
@@ -763,7 +860,7 @@ public double[] getCenterNewPosition(double[] newPosition){
 /**
  * Cte for the length of a game cube
  */
-private int Lc = 1;
+static int Lc = 1;
 
 /**
  * Var + methods for to calc the center pos of the Cube where a unit moves to
@@ -774,18 +871,29 @@ private long Zc;
 private long Xc2;
 private long Yc2;
 private long Zc2;
-
+/**
+ * Calculates the x position of the center of a cube
+ */
 public long Xc(){
 	 long xc = getOccupiedGameCube(getPoistion())[0];
-	 return this.Xc = xc;
+	 this.Xc = xc;
+	 return this.Xc;
 }
+/**
+ * Calculates the y position of the center of a cube
+ */
 public long Yc(){
 	 long xc = getOccupiedGameCube(getPoistion())[1];
-	 return this.Yc = xc;
+	 this.Yc = xc;
+	 return this.Yc;
 }
+/**
+ * Calculates the z position of the center of a cube
+ */
 public long Zc(){
 	 long xc = getOccupiedGameCube(getPoistion())[2];
-	 return this.Zc = xc;
+	 this.Zc = xc;
+	 return this.Zc;
 }
 
 /**
@@ -802,15 +910,11 @@ public long Zc(){
  * 		| with z = this.getPosition[2] && z' == newPosition[2]  
  * 
  */
-
-
 public double Vw(double[] newPosition){
 	double[] nP = getCenterNewPosition(newPosition);
-	if ((getPoistion()[2] - nP[2] >=  -1) && 
-			(getPoistion()[2] - nP[2] <=  -1.01))
+	if ( Util.fuzzyEquals(getPoistion()[2] - nP[2], -1))
 		this.Vw = Vb() * 0.5;
-	else if ((getPoistion()[2] - nP[2] >=  1) && 
-			(getPoistion()[2] - nP[2] <=  1.01))
+	else if (Util.fuzzyEquals(getPoistion()[2] - nP[2], 1))
 		this.Vw = Vb() * 1.2;
 	else
 		this.Vw = Vb();
@@ -842,7 +946,9 @@ public double Vs(double[] newPosition){
 }
 
 
-
+/**
+ * constants for the walking and sprinting speed
+ */
 private double Vs;
 private double Vw;
 
@@ -857,19 +963,19 @@ private double Vw;
  * 
  */
 public void moveToAdjacent(double[] newPosition){
-	if (canHaveAsPoistion(newPosition) && isMoving == false){
+	if (canHaveAsPoistion(newPosition) && isMoving() == false && isFalling() == false){
 		isMoving = true;
 		while (getPoistion()[0] != newPosition[0]){
-			this.Position[1] = getPoistion()[0] + (v(newPosition)[0]* 0.2);
-			advanceTime(0.2);
+			this.Position[1] = getPoistion()[0] + (v(newPosition)[0]* dt);
+			advanceTime(dt);
 		}
 		while (getPoistion()[1] != newPosition[1]){
-			this.Position[1] = getPoistion()[1] + (v(newPosition)[1]* 0.2);
-			advanceTime(0.2);
+			this.Position[1] = getPoistion()[1] + (v(newPosition)[1]* dt);
+			advanceTime(dt);
 			}
 		while (getPoistion()[2] != newPosition[2]){
-			this.Position[2] = getPoistion()[2] + (v(newPosition)[2]* 0.2);
-			advanceTime(0.2);
+			this.Position[2] = getPoistion()[2] + (v(newPosition)[2]* dt);
+			advanceTime(dt);
 		}
 		if (getPoistion() == newPosition)
 			this.Position = getCenterNewPosition(getPoistion());
@@ -879,7 +985,9 @@ public void moveToAdjacent(double[] newPosition){
 	double vy = v(newPosition)[1];
 	setOrientation(Math.round(Math.atan2(vy, vx)));
 }
-
+/**
+ * return whether a unit is moving or not
+ */
 private boolean isMoving = false;
 public boolean isMoving(){
 	return this.isMoving;
@@ -932,7 +1040,9 @@ private double[] v(double[] newPosition){
 	return v;
 		
 }
-
+/**
+ * return the current speed of a unit
+ */
 public double getCurrentSpeed(){
 	double a = Math.pow(v(getCenterPosition())[0],2);
 	double b = Math.pow(v(getCenterPosition())[1],2);
@@ -979,30 +1089,122 @@ public void moveTo(double[] newPosition){
 		moveToAdjacent(pos);
 	}	
 }
+/**
+ * Queues for the position and n for the moveTo method
+ */
+Queue<double[]> Q1 = new LinkedList<double[]>();
+Queue<Integer> Q2 = new LinkedList<Integer>();
+
+/**
+ * Path finding method that moves units to a newPosition more than 1 away from their current position
+ * @param newPosition 
+ * 			new position for the unit to go to
+ * @param n0
+ * 			number of steps to get to the new position
+ * @effect the units position is equal to the newPosition
+ * 			|new.getPosition == newPosition
+ * 
+ */
+public void moveTo(double[] newPosition, int n0){
+	int x = (int) Math.floor(newPosition[0]);
+	int z = (int) Math.floor(newPosition[2]);
+	int y = (int) Math.floor(newPosition[1]);
+	
+	ArrayList<double[]> L = new ArrayList<double[]>();
+	for (int i = -1; i <= 1; i++)
+		for (int j = -1; j <= 1; j++)
+			for (int k = -1; k <= 1; k++){
+				if (world.isPassable(x+i, y+j, z+k) && (! world.isPassable(x+i, y+j, z+k))
+				 && (! Q1.contains(coordToPos(x-1, y, z)) && (! Q2.contains(n0)))){	
+					L.add(coordToPos(x+i, y+j, z+k));	
+		}
+	}
+	for (int i = 0; i < L.size(); i++) {
+		Q1.add(L.get(i));
+		Q2.add(n0+1);
+	}
+
+	while (getPoistion() != newPosition){
+		while (isUnderAttack() == false && isResting() == false 
+				&& hasToRest() == false){
+		Q1.add(newPosition);
+		Q2.add(0);
+		while (! Q1.contains(getPoistion())&& Q1.size() > 0){
+			double[] p = Q1.element();
+			int n = Q2.element();
+			moveTo(p, n);
+		}
+		}
+	}
+	if (Q1.contains(getPoistion()))
+		for (int i = -1; i <= 1; i++)
+			for (int j = -1; j <= 1; j++)
+				for (int k = -1; k <= 1; k++){
+					if (Q1.contains(coordToPos(x+i, y+j, z+k))){
+						double [] next = coordToPos(x+i, y+j, z+k);
+						moveToAdjacent(next);
+					}
+				}
+}
 
 
 
+/**
+ * Takes x, y and z coordinates and returns it as a double[]
+ * @param x
+ * 			xPosition
+ * @param y
+ * 			yPosiiton
+ * @param z
+ * 			zPosition
+ * @return Returns the position as a double[]
+ * 			|coordToPos(x,y,z) == double[] pos = {x,y,z}
+ */
+public double[] coordToPos(double x, double y, double z){
+	double[] p = {x,y,z};
+	return p;
+}
+
+
+/**
+ * Make a unit start sprinting
+ */
 public void startSprint(){
 	this.Sprint = true;
 }
+/**
+ * Make a unit stop sprinting
+ */
 public void stopSprint(){
 	this.Sprint = false;
 }
+/**
+ * 
+ * check if a unit is sprinting
+ */
 public boolean isSprinting(){
 	return this.Sprint;
 }
 public boolean Sprint = false;
 
-
+/**
+ * Method that makes a unit work
+ */
 public void work(){
 	float TimeLeft = 500/getStength();
-	while (this.working == true)
-		for (int i = 0; TimeLeft/0.2 > i; i++)
-			advanceTime(0.2);
+	while (this.working == true && isUnderAttack() == false)
+		for (int i = 0; TimeLeft/dt > i; i++)
+			advanceTime(dt);
 }
+/**
+ * Make a unit start working
+ */
 public boolean enableWorking(){
 	return this.working == true;
 }
+/**
+ * Check if a unit is working
+ */
 public boolean isWorking(){
 	if (this.working == true)
 		return true;
@@ -1012,8 +1214,18 @@ public boolean isWorking(){
 private boolean working = false;
 
 
-
+/**
+ * Make a unit attack another unit from a different faction
+ * @param Attacker
+ * 			the unit that attacks the defender
+ * @param Defender
+ * 			the unit that defends himself from the attacker
+ * @effect
+ * 		Make a unit start attacking another one who defends himself
+ */
 public void attack(Unit Attacker, Unit Defender){
+	List<Unit> p = faction.getAllUnitsFromFaction();
+	if (!(p.contains(Attacker) && p.contains(Defender))){
 	float TimeLeft = 1;
 	double xa = Attacker.getPoistion()[0];
 	double ya = Attacker.getPoistion()[1];
@@ -1024,21 +1236,48 @@ public void attack(Unit Attacker, Unit Defender){
 			Defender.underAttack = true;
 			defend(Attacker, Defender);
 			setOrientation(Math.round(Math.atan2((yd-ya), (xd-xa))));
-			advanceTime(0.2);
-			TimeLeft -= 0.2;
+			advanceTime(dt);
+			TimeLeft -= dt;
 	}
 		Attacker.attacking = false;
 		Defender.underAttack = false;
+	}
 }
+/**
+ * variable for a faction
+ */
+private Faction faction;
+
+/**
+* Check if a unit is attacking another one
+ */
 public boolean isAttacking(){
 	if (this.attacking == true)
 		return true;
 	else
 		return false;
 }
+/**
+ *Check if this unit is under attack
+ */
+public boolean isUnderAttack(){
+	return this.underAttack;
+}
+
 private boolean attacking = false;
 private boolean underAttack = false;
-
+/**
+ * Make a unit defend himself against another one from a different faction 
+ * @param Attacker
+ * 			unit that is attacking the other unit
+ * @param Defender
+ * 			unit that is defending himself against the other unit
+ * @effect the defending unit either blocks damage and gains 20 xp
+ * 			or dodges the attack and gains 20 xp
+ * 			or gets hit and loses Attacker.getStrength/10 hp and the 
+ * 			attacker gains 20 xp
+ * 
+ */
 public void defend(Unit Attacker, Unit Defender){
 	double xa = Attacker.getPoistion()[0];
 	double ya = Attacker.getPoistion()[1];
@@ -1049,27 +1288,42 @@ public void defend(Unit Attacker, Unit Defender){
 	double blockChance = 0.25 * (Defender.getAgility() + Defender.getStength())/
 			(Attacker.getAgility() + Attacker.getStength());
 	double rand = Math.random();
-	double x,y,z;
 	setOrientation(Math.round(Math.atan2((ya-yd), (xa-xd))));
 	if (rand <= dodgeChance){
-		x = Defender.getPoistion()[0] += rand;
-		y = Defender.getPoistion()[1] += rand;
-		z = Defender.getPoistion()[2] += rand;
-		double[]  newPos = {x,y,z};
-		assert canHaveAsPoistion(newPos);
+		double[]  newPos = coordToPos(Defender.getPoistion()[0] += rand, 
+				Defender.getPoistion()[1] += rand, Defender.getPoistion()[2] += rand);
+		if( canHaveAsPoistion(newPos)){
 		Defender.Position = newPos;	
+		Defender.addXP(20);
+		}
 	}
 	else if (dodgeChance < rand) 
-		if (rand <= (dodgeChance + blockChance))
+		if (rand <= (dodgeChance + blockChance)){
 			attack(Defender, Attacker);
+			Defender.addXP(20);
+		}
 		else{
 			int hp;
 			hp = Defender.getHitpoints() - Attacker.getStength()/10;
 			Defender.setHitpoints(hp);
+			Attacker.addXP(20);
 		}
 	}
+	if (Defender.getHitpoints() == 0)
+		killUnit();
+	levelUp();
 }
-
+/**
+ * Make a unit rest
+ * @effect The units hitpoints go up while resting until they are full, then the units
+ * 			stamina points go up
+ * 			| while (resting)
+ * 			|	if (this.getHitpoints < maxHP)
+ * 			|   new.setHitpoints(this.getHitpoints+getToughness/200)*dt
+ * 			|	else
+ * 			|	new.setStamina(this.getStamina+getToughness/100)*dt
+ * 			
+ */
 public void rest(){
 	int hp = this.getHitpoints();
 	int stam = this.getStamina();
@@ -1078,19 +1332,35 @@ public void rest(){
 			while (getHitpoints() < maxHP()){
 				hp += getToughness()/200;
 				setHitpoints(hp);	
-				advanceTime(0.2);
+				advanceTime(dt);
 			}
 		else if (getStamina() < maxStamina())
 			while (getStamina() < maxStamina()){
 				stam += getToughness()/100;
 				setStamina(stam);
-				advanceTime(0.2);
+				advanceTime(dt);
 			}
 	}
 }
-public boolean enableRest(){
-	return this.resting = true;
+/**
+ * Make a unit start resting
+ */
+public void enableRest(){
+	rest();
+	this.resting = true;
 }
+/**
+ * Check if this unit has to rest
+ */
+public boolean hasToRest(){
+	if (getStamina() == 0)
+		return true;
+	else
+		return false;
+}
+/**g
+ * Check if a unit is resting
+ */
 public boolean isResting(){
 	if (this.resting = true)
 		return true;
@@ -1098,48 +1368,294 @@ public boolean isResting(){
 		return false;
 }
 private boolean resting = false;
-
+/**
+ * Activate the default behaviour of a unit (the unit starts resting, working,
+ * fighting another unit or moves to a random position)
+ * @param defBeh
+ * 			checks if default behaviour is on or not
+ */
 public void startDefaultBehaviour(boolean defBeh){
 	Random rand = new Random(); 
-	int r = rand.nextInt(2) +1;
+	int r = rand.nextInt(3) +1;
 	int p = rand.nextInt(1) + 1;
-	double newPosX = getPoistion()[0] + p * Math.pow(-1, r);
-	double newPosY = getPoistion()[1] + p * Math.pow(-1, p);
-	double newPosZ = getPoistion()[2] + p * Math.pow(-1, r);
-	double[] newPos = {newPosX, newPosY, newPosZ};
+	Unit other = null;
+	double[] newPos = coordToPos(getPoistion()[0] + p * Math.pow(-1, r),
+			getPoistion()[1] + p * Math.pow(-1, p), getPoistion()[2] + p * Math.pow(-1, r));
 	if (working == false && attacking == false && resting == false &&
 			moving == false && underAttack == false && defBeh == true){
-		defBehav = true;
+		this.defBehav = true;
 		if (r == 1)
 			rest();
 		else if (r == 2)
 			work();
+		else if (r == 3)
+			attack(this,other);
 		else{
 			if (Stamina > 0)
-				moveTo(newPos);
+				moveTo(newPos,0);
 			else
-				moveTo(newPos);
+				moveTo(newPos,0);
 		}
 	}
 		else
-			defBehav = false;
+			this.defBehav = false;
 }
 private boolean defBehav;
-
+/**
+ * Checks whether default behaviour is on or not
+ */
 public boolean isDefaultBehaviourEnabled(){
-	return defBehav;
+	return this.defBehav;
 }
 private boolean moving = false;
 
 
-
+/**
+ * Method to advance time in the game
+ * @param deltaT
+ * 			difference in time 0 <= deltaT <= 0.2 in seconds
+ */
 public void advanceTime(double deltaT){
-	
-	this.Time += deltaT;
+	double d = deltaT/dt;
+	int i = 0;
+	while (i < d){
+	this.setTime(this.getTime() + dt);
+	i++;
+	}
 
+}
+/**
+ *Returns the current Time
+ */
+public double getTime() {
+	return Time;
+}
+
+/**
+ * Sets the current Time to time
+ * @param time
+ * 			the Time that has to be set
+ */
+public void setTime(double time) {
+	Time = time;
 }
 
 private double Time;
+private double dt = 0.2;
+public boolean isDead;
+/**
+ * Variable referencing to the world this unit belongs to
+ */
+private World world = null;
+/**
+ * Makes a unit fall if he is standing on a passable cube and there are no other
+ * impassable cubes less than  1 lc around him
+ * @param world
+ * 			| the world in which the unit exists
+ * @post 	if there is no passable cubes around the unit it falls and loses 10 hiptpoints
+ * 			per z level he falls
+ * 			| wile (world.isPassable(x+/-1,y+/-1,z+/-1) && z>0
+ * 			|    new.setPosition(x,y,z-1) && new.setHipoints(getHitpoints-10) 	
+ */
+public void Fall(){
+	double[] p = getPoistion();
+	int x = (int) Math.floor(p[0]);
+	int y = (int) Math.floor(p[1]);
+	int z = (int) Math.floor(p[2]);
+	boolean canFall = false;
+	int v = -3;
+	
+	if (! world.isPassable(x+1,y,z))
+		canFall = false;
+	else if (! world.isPassable(x-1,y,z))
+		canFall = false;
+	else if (! world.isPassable(x,y+1,z))
+		canFall = false;
+	else if (! world.isPassable(x,y-1,z))
+		canFall = false;
+	else if (! world.isPassable(x,y,z+1))
+		canFall = false;
+	else if (! world.isPassable(x,y,z-1))
+		canFall = false;
+	else
+		canFall = true;
+	
+	if (canFall == true){
+		this.falling = true;
+		double dt = Lc/v;
+		advanceTime(dt);
+		z--;
+		setHitpoints(getHitpoints()-10);
+		double[] p2 = coordToPos(x, y, z);
+		setPosition(p2);
+		if (world.isPassable(x, y, z) && z > 0)
+			Fall();
+			
+	}
+	this.falling = false;
+	if (this.getHitpoints() == 0)
+		killUnit();
+}
+
+/**
+ * Check if a unit is falling
+ */
+public boolean isFalling(){
+	return this.falling;
+}
+private boolean falling = false;
+
+/**
+ * Check whether a unit is dead or not
+ */
+public boolean isDead() {
+	return this.dead;
+}
+/**
+ * Variable for the death of a unit
+ */
+private boolean dead = false;
+
+/**
+ * Kills a unit when its hitpoints reach 0, removes it from the world, 
+ * his current faction and drops the objects he was holding (if he was holding
+ * any)
+ */
+public void killUnit(){
+	if (this.getHitpoints() == 0){
+		dead = true;
+		List<String> f = world.getAllFactions();
+		int l = f.size();
+		for (int i = 0; i < l; i++)
+			if (faction.getFactionFromName(f.get(i)).hasAsFaction(this))
+				faction.removeUnitFromFact(this);
+		List<Unit> w = world.getAllUnits();
+		w.remove(this);
+		if (holdsBoulder()){
+			boulder.setHolder(null);
+			boulder.setPosition(this.getPoistion());
+		}
+		if (holdsLog()){
+			log.setHolder(null);
+			log.setPosition(this.getPoistion());
+		}
+		this.attacking = false;
+		this.resting = false;
+		this.working = false;
+		this.falling = false;
+		this.defBehav = false;
+		this.isMoving = false;
+		this.underAttack = false;
+	}
+}
+
+/**
+ * Check if this unit holds a log
+ * @return true if this unit holds the log false otherwise 			
+ */
+public boolean holdsLog(){
+	assert log.hasHolder();
+	return log.getHolder() == this;
+}
+private Log log;
+/**
+ * Check if this unit holds a boulder
+ * @return true if this unit holds the boulder false otherwise			
+ */
+public boolean holdsBoulder(){
+	return boulder.getHolder() == this;
+}
+private Boulder boulder;
+/**
+ * 
+ * @param x
+ * @param y
+ * @param z
+ */
+public void workAt(int x, int y, int z){
+	work();
+	
+	if (holdsBoulder()){
+		boulder.unsetHolder();
+		boulder.setPosition(coordToPos(x, y, z));
+		addXP(10);
+	}
+		
+	else if (holdsLog()){
+		log.unsetHolder();
+		log.setPosition(coordToPos(x, y, z));
+		addXP(10);
+	}
+	else if (world.getCubeType(x, y, z) == (Object)3 && 
+			boulder.getPosition() == coordToPos(x, y, z) &&
+			log.getPosition() == coordToPos(x, y, z)){
+		log.Consume();
+		boulder.Consume();
+		setWeight(getWeight()+1);
+		setToughness(getToughness()+1);
+		addXP(10);
+	}
+	
+	else if (boulder.getPosition() == coordToPos(x, y, z)){
+		boulder.setHolderTo(this);
+		addXP(10);
+	}
+	
+	else if (log.getPosition() == coordToPos(x, y, z)){
+		log.setHolderTo(this);
+		addXP(10);
+	}
+	
+	else if (world.getCubeType(x, y, z) == (Object)2){
+		world.collapseCube(x, y, z);
+		addXP(10);
+	}
+	
+	else if (world.getCubeType(x, y, z) == (Object)1){
+		world.collapseCube(x, y, z);
+		addXP(10);
+	}
+	levelUp();
+}
+
+/**
+ * variable to hold this units xp
+ */
+private int XP;
+/**
+ * add xp to the units total xp
+ * @param xp
+ * 			|xp to be added to the total xp of this unit
+ */
+public void addXP(int xp){
+	this.XP += xp;
+}
+/**
+ * Get the xp of this unit
+ */
+public int getXP(){
+	return this.XP;
+}
+
+/**
+ * If a unit has gathered 10 or more xp, its strength, agility or toughness 
+ * will be increased by 1
+ */
+public void levelUp(){
+	Random rand = new Random();
+	if (getXP() >= 10){
+		for (int i = getXP(); i >= 10; i-=10){
+			int p = rand.nextInt(100);
+			if (p <= 33)
+				setAgility(getAgility()+1);
+			else if (p>33 && p <= 66)
+				setStength(getStength()+1);
+			else
+				setToughness(getToughness()+1);
+		}
+	}	
+}
+
 
 
 }
