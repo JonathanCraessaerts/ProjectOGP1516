@@ -25,4 +25,17 @@ public Boulder(double[] Position, int Weight, Unit holder) throws IllegalArgumen
 	super(Position, Weight, holder);
 }
 
+ 
+ /**
+  * Creating a boulder that doesn't have a holder
+  * @param Position
+  *    The Position for this new object.
+
+  * @param Weight
+  * 		The Weight of this new object.
+  */
+ public Boulder(double[] Position, int Weight){
+	 super(Position, Weight);
+ }
+ 
 }

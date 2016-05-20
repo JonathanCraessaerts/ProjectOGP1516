@@ -23,7 +23,7 @@ public class Facade implements IFacade {
 	}
 
 	@Override
-	public long[] getCubeCoordinate(Unit unit) throws ModelException {
+	public int[] getCubeCoordinate(Unit unit) throws ModelException {
 
 		return unit.getOccupiedGameCube(unit.getPoistion());
 	}

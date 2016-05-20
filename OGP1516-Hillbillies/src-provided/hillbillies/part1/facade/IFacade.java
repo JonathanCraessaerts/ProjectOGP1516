@@ -121,7 +121,7 @@ public interface IFacade {
 	 * @throws ModelException
 	 *             A precondition was violated or an exception was thrown.
 	 */
-	public long[] getCubeCoordinate(Unit unit) throws ModelException;
+	public int[] getCubeCoordinate(Unit unit) throws ModelException;
 
 	/* Name */
 	/**

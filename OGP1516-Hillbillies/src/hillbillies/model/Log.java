@@ -25,4 +25,17 @@ public Log(double[] Position, int Weight, Unit holder) throws IllegalArgumentExc
 	super(Position, Weight, holder);
 }
 
+ /**
+  * Creating a log that doesn't have a holder
+  * @param Position
+  *    The Position for this new object.
+
+  * @param Weight
+  * 		The Weight of this new object.
+  */
+ public Log(double[] Position, int Weight){
+	 super(Position, Weight);
+ }
+ 
+ 
 }

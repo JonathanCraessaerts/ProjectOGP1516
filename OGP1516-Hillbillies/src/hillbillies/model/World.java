@@ -1,7 +1,7 @@
 package hillbillies.model;
 
 import hillbillies.part2.listener.TerrainChangeListener;
-import hillbillies.util.*;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,15 +40,25 @@ public class World {
 	 */
 	public World(int[][][] terrainTypes, TerrainChangeListener modelListener){
 		Random rand = new Random();
-		this.xDim = 50;
-		this.yDim = 50;
-		this.zDim = 50;
+		
+		World.xDim = terrainTypes.length;
+		World.yDim = terrainTypes[0].length;
+		World.zDim = terrainTypes[0][0].length;
+		
 		for (int x = 0; x < getNbCubesX(); x++)
 			for (int y = 0; y < getNbCubesY(); y++)
 				for (int z = 0; z < getNbCubesZ(); z++){
-					int a = rand.nextInt(1) + 1;
+					int a = rand.nextInt(3) + 1;
 					if (a == 1){
 						terrainTypes[x][y][z] = TYPE_ROCK;
+						this.TerrainTypes = terrainTypes;
+					}
+					else if (a==2){
+						terrainTypes[x][y][z] = TYPE_AIR;
+						this.TerrainTypes = terrainTypes;
+					}
+					else if (a==3){
+						terrainTypes[x][y][z] = TYPE_WORKSHOP;
 						this.TerrainTypes = terrainTypes;
 					}
 					else{
@@ -56,29 +66,25 @@ public class World {
 						this.TerrainTypes = terrainTypes;
 					}
 				}
-		for (int x = 0; x < getNbCubesX(); x++)
-			for (int y = 0; y < getNbCubesY(); y++)
-				for (int z = 0; z < getNbCubesZ(); z++){
-					collapseCube(x, y, z);
-				}
+
 	}
 	/**
 	 * Return the number of cubes in the world in the x-direction.
 	 */
-	public int getNbCubesX(){
-		return this.xDim;
+	public static int getNbCubesX(){
+		return World.xDim;
 	}
 	/**
 	 * Return the number of cubes in the world in the y-direction.
 	 */
-	public int getNbCubesY(){
-		return this.yDim;
+	public static int getNbCubesY(){
+		return World.yDim;
 	}
 	/**
 	 * Return the number of cubes in the world in the z-direction.
 	 */
-	public int getNbCubesZ(){
-		return this.zDim;
+	public static int getNbCubesZ(){
+		return World.zDim;
 	}
 	
 	
@@ -94,17 +100,264 @@ public class World {
 	 * 		result == true if cube is connected to another solid cube
 	 */
 	public boolean isSolidConnectedToBorder(int x, int y, int z){
-		ConnectedToBorder cube = new ConnectedToBorder(x, y, z);
-		return cube.isSolidConnectedToBorder(x,y,z);
+	
+		if (x > 0 && x < getNbCubesX()){
+			if (y > 0 && y < getNbCubesY()){
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+			else if (y == getNbCubesY()){
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+			else{
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if (isPassable(x+1, y, z)==false || isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false 
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}		
+		}
+		
+		
+		
+		else if (x == getNbCubesX()){
+			if (y > 0 && y < getNbCubesY()){
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if ( isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+			else if (y == getNbCubesY()){
+				if (z > 0 && z < getNbCubesZ()){
+					if ( isPassable(x-1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if ( isPassable(x-1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if ( isPassable(x-1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+			else{
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if ( isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if ( isPassable(x-1, y, z)==false 
+							|| isPassable(x, y+1, z)==false 
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+		}
+		
+		
+		
+		
+		else{
+			if (y > 0 && y < getNbCubesY()){
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if (isPassable(x+1, y, z)==false 
+							|| isPassable(x, y+1, z)==false || isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+			else if (y == getNbCubesY()){
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false 
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if (isPassable(x+1, y, z)==false
+							|| isPassable(x, y-1, z)==false
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+			else{
+				if (z > 0 && z < getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false  
+							|| isPassable(x, y+1, z)==false
+							|| isPassable(x, y, z+1)==false || isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else if(z == getNbCubesZ()){
+					if (isPassable(x+1, y, z)==false 
+							|| isPassable(x, y+1, z)==false
+							|| isPassable(x, y, z-1)==false)
+								return true;	
+					else 
+						return false;
+				}
+				else{
+					if (isPassable(x+1, y, z)==false
+							|| isPassable(x, y+1, z)==false 
+							|| isPassable(x, y, z+1)==false)
+								return true;	
+					else 
+						return false;
+				}
+			}
+		}
+
 	}
 	
 	/**
 	 * Dimensions of the game World
 	 */
-	private int xDim;
-	private int yDim;
-	private int zDim;
-	private int[][][] TerrainTypes;
+	private static int xDim;
+	private static int yDim;
+	private static int zDim;
+	private int[][][] TerrainTypes = new int[getNbCubesX()][getNbCubesY()][getNbCubesZ()];
 	
 	/**
 	 * Types of the terrain represented as integers
@@ -169,11 +422,13 @@ public class World {
 				Faction faction = new Faction(name);
 				assert faction.canHaveAsName(name);
 				faction.addUnitToFact(unit);
+				unit.setFaction(faction);
 				addFaction(faction);
 			}
 			else{
 				Faction faction = getSmallestFaction();
 				faction.addUnitToFact(unit);
+				unit.setFaction(faction);
 			}	
 			int b = getNbOfUnits();
 			setNbOfUnits(++b);;
@@ -206,9 +461,9 @@ public class World {
 	 */
 	public int[] randPos(){
 		Random rand = new Random();
-		int x = rand.nextInt(xDim-1);
-		int y = rand.nextInt(yDim-1);
-		int z = rand.nextInt(zDim-1);
+		int x = rand.nextInt(getNbCubesX()-1);
+		int y = rand.nextInt(getNbCubesY()-1);
+		int z = rand.nextInt(getNbCubesZ()-1);
 		int[] pos = {x,y,z};
 		return pos;
 	}
@@ -225,7 +480,7 @@ public class World {
 		int x = rand[0];
 		int y = rand[1];
 		int z = rand[2];
-		if (! isPassable(x, y, z) ||  !(! isPassable(x,y,z-1)||z==0 )){
+		if (isPassable(x, y, z)==false ||  !(isPassable(x,y,z-1)==false||z==0 )){
 			rand = randPos();
 			validRandPos();
 		}
@@ -247,8 +502,8 @@ public class World {
 	 * 					false if getCubeType()== TYPE_AIR || TYPE_WORKSHOP
 	 */
 	public boolean isPassable(int x, int y, int z){
-		if (getCubeType(x, y, z) == (Object) TYPE_ROCK || 
-				getCubeType(x, y, z) == (Object) TYPE_TREE)
+		if (this.TerrainTypes[x][y][z] == TYPE_ROCK || 
+				this.TerrainTypes[x][y][z] ==  TYPE_TREE)
 			return false;
 		else
 			return true;
@@ -266,16 +521,15 @@ public class World {
 	 * @return the type of terrain a cube has
 	 */
 	public Object getCubeType(int x, int y, int z){
-		if (this.TerrainTypes[x][y][z] == TYPE_AIR)
-			return 0;
-		else if (this.TerrainTypes[x][y][z] == TYPE_ROCK)
-			return 1;
-		else if (this.TerrainTypes[x][y][z] == TYPE_TREE)
-			return 2;
-		else if (this.TerrainTypes[x][y][z] == TYPE_WORKSHOP)
-			return 3;
-		else	
-			return null;
+		if (this.TerrainTypes[x][y][z] == 0)
+			return TYPE_AIR;
+		else if (this.TerrainTypes[x][y][z] == 1)
+			return TYPE_ROCK;
+		else if (this.TerrainTypes[x][y][z] == 2)
+			return TYPE_TREE;
+		else 
+			return TYPE_WORKSHOP;
+
 	}
 	/**
 	 * Takes x, y and z coordinates and returns it as a double[]
@@ -312,23 +566,31 @@ public class World {
 		Random rand = new Random();
 		int p = rand.nextInt(100);
 		int w = rand.nextInt(40)+10;
-		if (! isSolidConnectedToBorder(x, y, z)){
-		if (getCubeType(x, y, z) == (Object)2){
-			this.TerrainTypes[x][y][z] = TYPE_AIR;
+		if (isSolidConnectedToBorder(x, y, z)==false){
+		if (getCubeType(x, y, z) == (Object) TYPE_TREE){
+			this.TerrainTypes[x][y][z] = 0;
 			if (p <= 25){
-				Log log = new Log(coordToPos(x, y, z), w, null);
+				Log log = new Log(coordToPos(x, y, z), w);
 				setNbOfLogs(getNbOfLogs()+1);
-				if (isPassable(x, y, z-1))
+				if (isPassable(x, y, z-1)==true && z-1>0)
 					log.Fall();
+				int a = (int) Math.round(log.getPosition()[0]);
+				int b = (int) Math.round(log.getPosition()[1]);
+				int c = (int) Math.round(log.getPosition()[2]);
+				allLogs[a][b][c]++;
 			}
 		}
-		else if (getCubeType(x, y, z) == (Object)1){
-			this.TerrainTypes[x][y][z] = TYPE_AIR;
+		else if (getCubeType(x, y, z) == (Object) TYPE_ROCK){
+			this.TerrainTypes[x][y][z] = 0;
 			if (p <= 25){
-				Boulder boulder = new Boulder(coordToPos(x, y, z), w, null);
+				Boulder boulder = new Boulder(coordToPos(x, y, z), w);
 				setNbOfBoulders(getNbOfBoudlers()+1);
-				if (isPassable(x, y, z-1))
+				if (isPassable(x, y, z-1)==true && z-1>0)
 					boulder.Fall();
+				int a = (int) Math.round(boulder.getPosition()[0]);
+				int b = (int) Math.round(boulder.getPosition()[1]);
+				int c = (int) Math.round(boulder.getPosition()[2]);
+				allBoulders[a][b][c]++;
 			}
 		}
 		}
@@ -360,6 +622,24 @@ public class World {
 	private int NbOfLogs;
 	private int NbOfBoulders;
 	
+	public boolean hasLog(int x, int y, int z){
+		if (allLogs[x][y][z] > 0)
+			return true;
+		else
+			return false;
+				
+	}
+	
+	public boolean hasBoulder(int x, int y, int z){
+		if (allBoulders[x][y][z] > 0)
+			return true;
+		else
+			return false;
+				
+	}
+	
+	
+	
 	/**
 	 * Get the number of units in this world
 	 */
@@ -381,6 +661,42 @@ public class World {
 	private int maxNbOfUnits = 100;
 	private int NbOfUnits;
 
+	/**
+	 * Method to advance time in the game
+	 * @param deltaT
+	 * 			difference in time 0 <= deltaT <= 0.2 in seconds
+	 */
+	public void advanceTime(double deltaT){
+		double d = deltaT/dt;
+		int i = 0;
+		while (i < d){
+		this.setTime(this.getTime() + dt);
+		i++;
+		}
+
+	}
+	
+	/**
+	 *Returns the current Time
+	 */
+	public double getTime() {
+		return Time;
+	}
+
+	/**
+	 * Sets the current Time to time
+	 * @param time
+	 * 			the Time that has to be set
+	 */
+	public void setTime(double time) {
+		Time = time;
+	}
+
+	private double Time;
+	private double dt = 0.2;
+	
+	
+	
 	/**
 	 * Make a name for a new faction
 	 * @return
@@ -515,7 +831,8 @@ public class World {
      *        |   (factions.get(key).getFaction().getCode().equals(key))
      */
     private final Map<String, Faction> factions = new HashMap<String, Faction>();
-
+    private final int[][][] allLogs = new int[getNbCubesX()][getNbCubesY()][getNbCubesZ()];
+    private final int[][][] allBoulders = new int[getNbCubesX()][getNbCubesY()][getNbCubesZ()];
     
     
     

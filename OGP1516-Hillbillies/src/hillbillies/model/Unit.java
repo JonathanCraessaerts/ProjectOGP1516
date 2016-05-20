@@ -11,7 +11,7 @@ import java.util.Random;
 import be.kuleuven.cs.som.annotate.Basic;
 
 import be.kuleuven.cs.som.annotate.Raw;
-
+import hillbillies.part2.listener.DefaultTerrainChangeListener;
 import ogp.framework.util.Util;
 
 
@@ -216,11 +216,11 @@ public double[] getCenterPosition(){
  * @return
  * 			| new.getOccupiedGameCube == Position
  */
-public long[] getOccupiedGameCube(double[] Position){
-	long x = Math.round(Position[0]);
-	long y = Math.round(Position[1]);
-	long z = Math.round(Position[2]);
-	long [] OccupiedGameCube = {x, y, z};
+public int[] getOccupiedGameCube(double[] Position){
+	int x = (int) Math.round(Position[0]);
+	int y = (int) Math.round(Position[1]);
+	int z = (int) Math.round(Position[2]);
+	int[] OccupiedGameCube = {x, y, z};
 	return OccupiedGameCube;
 }
 
@@ -276,9 +276,9 @@ private double Ypos;
 private double Zpos;
 private double[] Position = {Xpos, Ypos, Zpos};
 
-private static double maxX = 50;
-private static double maxY = 50;
-private static double maxZ = 50;
+private static double maxX = World.getNbCubesX();
+private static double maxY = World.getNbCubesY();
+private static double maxZ = World.getNbCubesZ();
 
 
 
@@ -1224,8 +1224,7 @@ private boolean working = false;
  * 		Make a unit start attacking another one who defends himself
  */
 public void attack(Unit Attacker, Unit Defender){
-	List<Unit> p = faction.getAllUnitsFromFaction();
-	if (!(p.contains(Attacker) && p.contains(Defender))){
+	if (!(Attacker.getFaction() == Defender.getFaction())){
 	float TimeLeft = 1;
 	double xa = Attacker.getPoistion()[0];
 	double ya = Attacker.getPoistion()[1];
@@ -1373,17 +1372,24 @@ private boolean resting = false;
  * fighting another unit or moves to a random position)
  * @param defBeh
  * 			checks if default behaviour is on or not
+ * @post
+ * 		if
+ * 		defBeh == true
+ * 		rest || work || attack(other) || moveTo(newPos,0)
  */
 public void startDefaultBehaviour(boolean defBeh){
 	Random rand = new Random(); 
 	int r = rand.nextInt(3) +1;
 	int p = rand.nextInt(1) + 1;
-	Unit other = null;
+	Unit other = new Unit(getName(), initialPosition, getWeight(), getAgility(), getStength(), getToughness(), defBeh);
 	double[] newPos = coordToPos(getPoistion()[0] + p * Math.pow(-1, r),
 			getPoistion()[1] + p * Math.pow(-1, p), getPoistion()[2] + p * Math.pow(-1, r));
 	if (working == false && attacking == false && resting == false &&
 			moving == false && underAttack == false && defBeh == true){
 		this.defBehav = true;
+		if (! this.getFaction().getScheduler().tasksInDescendingPriority().isEmpty())
+			isIdle();
+		else{
 		if (r == 1)
 			rest();
 		else if (r == 2)
@@ -1391,10 +1397,8 @@ public void startDefaultBehaviour(boolean defBeh){
 		else if (r == 3)
 			attack(this,other);
 		else{
-			if (Stamina > 0)
 				moveTo(newPos,0);
-			else
-				moveTo(newPos,0);
+		}
 		}
 	}
 		else
@@ -1446,7 +1450,7 @@ public boolean isDead;
 /**
  * Variable referencing to the world this unit belongs to
  */
-private World world = null;
+private static World world = new World(new int[(int) maxX][(int) maxY][(int) maxZ], new DefaultTerrainChangeListener());
 /**
  * Makes a unit fall if he is standing on a passable cube and there are no other
  * impassable cubes less than  1 lc around him
@@ -1465,17 +1469,17 @@ public void Fall(){
 	boolean canFall = false;
 	int v = -3;
 	
-	if (! world.isPassable(x+1,y,z))
+	if (world.isPassable(x+1,y,z)==false)
 		canFall = false;
-	else if (! world.isPassable(x-1,y,z))
+	else if (world.isPassable(x-1,y,z)==false)
 		canFall = false;
-	else if (! world.isPassable(x,y+1,z))
+	else if (world.isPassable(x,y+1,z)==false)
 		canFall = false;
-	else if (! world.isPassable(x,y-1,z))
+	else if (world.isPassable(x,y-1,z)==false)
 		canFall = false;
-	else if (! world.isPassable(x,y,z+1))
+	else if (world.isPassable(x,y,z+1)==false)
 		canFall = false;
-	else if (! world.isPassable(x,y,z-1))
+	else if (world.isPassable(x,y,z-1)==false)
 		canFall = false;
 	else
 		canFall = true;
@@ -1507,6 +1511,8 @@ private boolean falling = false;
 
 /**
  * Check whether a unit is dead or not
+ * @return
+ * 			true == dead==true, false otherwise
  */
 public boolean isDead() {
 	return this.dead;
@@ -1515,29 +1521,46 @@ public boolean isDead() {
  * Variable for the death of a unit
  */
 private boolean dead = false;
+/**
+ * set the faction of this unit to faction
+ * @param faction
+ * 			the faction to which this unit will belong
+ * @post
+ * 			new.getFaction == faction
+ */
+public void setFaction(Faction faction){
+	if (! faction.hasAsFaction(this))
+		this.faction = faction;
+}
+/**
+ * return the faction of this unit
+ * @return
+ * 		the faction of this unit
+ */
+public Faction getFaction(){
+	return this.faction;
+}
 
 /**
  * Kills a unit when its hitpoints reach 0, removes it from the world, 
  * his current faction and drops the objects he was holding (if he was holding
  * any)
+ * @POST
+ * 			! world.getAllUnits.contains(this)
  */
 public void killUnit(){
 	if (this.getHitpoints() == 0){
 		dead = true;
-		List<String> f = world.getAllFactions();
-		int l = f.size();
-		for (int i = 0; i < l; i++)
-			if (faction.getFactionFromName(f.get(i)).hasAsFaction(this))
-				faction.removeUnitFromFact(this);
+		getFaction().removeUnitFromFact(this);
 		List<Unit> w = world.getAllUnits();
 		w.remove(this);
-		if (holdsBoulder()){
-			boulder.setHolder(null);
+		if (holdsBoulder()==true){
 			boulder.setPosition(this.getPoistion());
+			boulder.setHolder(null);
 		}
-		if (holdsLog()){
-			log.setHolder(null);
+		if (holdsLog()==true){
 			log.setPosition(this.getPoistion());
+			log.setHolder(null);
 		}
 		this.attacking = false;
 		this.resting = false;
@@ -1567,21 +1590,24 @@ public boolean holdsBoulder(){
 }
 private Boulder boulder;
 /**
- * 
+ * Work at the given position
  * @param x
+ * 			the given x position
  * @param y
+ * 			the given Y position
  * @param z
+ * 			the given Z position
  */
 public void workAt(int x, int y, int z){
 	work();
 	
-	if (holdsBoulder()){
+	if (holdsBoulder()==true){
 		boulder.unsetHolder();
 		boulder.setPosition(coordToPos(x, y, z));
 		addXP(10);
 	}
 		
-	else if (holdsLog()){
+	else if (holdsLog()==true){
 		log.unsetHolder();
 		log.setPosition(coordToPos(x, y, z));
 		addXP(10);
@@ -1626,12 +1652,16 @@ private int XP;
  * add xp to the units total xp
  * @param xp
  * 			|xp to be added to the total xp of this unit
+ * @post
+ * 			new.XP == old.XP +xp
  */
 public void addXP(int xp){
 	this.XP += xp;
 }
 /**
  * Get the xp of this unit
+ * @return	
+ * 		this.XP
  */
 public int getXP(){
 	return this.XP;
@@ -1640,6 +1670,11 @@ public int getXP(){
 /**
  * If a unit has gathered 10 or more xp, its strength, agility or toughness 
  * will be increased by 1
+ *  @post
+ *  	if getXP>=10
+ *  		new.getStrength == old.getStrength +1 ||
+ *  		new.getThoughness == old.getThoughness +1 ||
+ *  		new.getAgility == old.getAgility +1
  */
 public void levelUp(){
 	Random rand = new Random();
@@ -1656,6 +1691,47 @@ public void levelUp(){
 	}	
 }
 
+
+
+
+/**
+ * Checking if this unit is idle and assigning it the highest priority task if it is
+ * @post
+ * 		new.isIdle == true
+ * 		! this.getFaction.getScheduler.contains(old.highestPriorityTask)
+ */
+public void Idle(){
+	if (working == false && attacking == false && resting == false &&
+			moving == false && underAttack == false && defBehav == true)
+		this.isIdle = true;
+	
+	if (isIdle()){
+		Task t = this.getFaction().getScheduler().highestPriorTask();
+		this.getFaction().getScheduler().assignTaskTo(this, t);
+		statSequence s = (statSequence) t.getActivities();
+		for (int i = 0; i < s.seqLength(); i++){
+			s.removeFromSequence(s.getIndex(i));
+			advanceTime(0.001);
+		}
+		t.completeTask();
+		this.getFaction().getScheduler().removeTask(t);
+	}
+}
+/**
+ * returns whether a unit is idle or not
+ * @return
+ * 		true if this.isIdle == true
+ * 		false otherwise
+ */
+public boolean isIdle(){
+	return this.isIdle;
+}
+
+
+/**
+ * variable for registering whether a unit is idle
+ */
+private boolean isIdle;
 
 
 }

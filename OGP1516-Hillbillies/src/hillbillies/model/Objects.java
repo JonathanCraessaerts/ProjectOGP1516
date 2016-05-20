@@ -6,6 +6,7 @@ import java.util.Random;
 import be.kuleuven.cs.som.annotate.Basic;
 import be.kuleuven.cs.som.annotate.Model;
 import be.kuleuven.cs.som.annotate.Raw;
+import hillbillies.part2.listener.DefaultTerrainChangeListener;
 
 /**
  * A class of things that have a weight and a position and can be carried around by units
@@ -56,6 +57,28 @@ public abstract class Objects {
 		
 	}
 	
+	
+	/**
+	 * Creating an object that doesn't have a holder
+	 * @param Position
+	 * 			The Position of this new object.
+	 * @param Weight
+	 * 			The Weight of this new object.
+	 * @throws IllegalArgumentException
+	 */
+	@Raw
+	@Model
+	protected Objects(double[] Position, int Weight)
+			throws IllegalArgumentException {
+		Random rand = new Random();
+		if (! isValidWeight(Weight))
+			setWeight(rand.nextInt(maxWeight-minWeight)+minWeight);
+		setWeight(Weight);
+		if (! isValidPosition(Position))
+			Fall();
+		setPosition(Position);
+		
+	}
 	
 	
 	/**
@@ -224,9 +247,9 @@ public void unsetPosition() {
  * Variable registering the Position of this object.
  */
 private double[] Position;
-private static int xDim = 50;
-private static int zDim = 50;
-private static int yDim = 50;
+private static int xDim = World.getNbCubesX();
+private static int zDim = World.getNbCubesY();
+private static int yDim = World.getNbCubesZ();
 
 
 
@@ -404,7 +427,7 @@ public void Fall(){
 		advanceTime(dt);
 		z--;
 		double[] p2 = {x,y,z};
-		setPosition(p2);
+		this.setPosition(p2);
 		if (world.isPassable(x, y, z) && z > 0)
 			Fall();
 			
@@ -414,7 +437,7 @@ public void Fall(){
 /**
  * Variable referencing to the world this unit belongs to
  */
-private static World world = null;
+private static World world = new World(new int[xDim][yDim][zDim], new DefaultTerrainChangeListener());
 
 
 }

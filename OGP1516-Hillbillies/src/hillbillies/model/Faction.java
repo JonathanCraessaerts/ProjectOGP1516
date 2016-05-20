@@ -310,6 +310,21 @@ private final List<Unit> faction = new ArrayList<Unit>();
 private int Factsize;
 private static int maxFactSize = 50;
 
+/**
+ * Return the scheduler of this faction
+ */
+public Scheduler getScheduler(){
+	return this.scheduler;
+}
+/**
+ * set the given scheduler as the scheduler of this faction
+ */
+public void setScheduler(Scheduler sched){
+	this.scheduler = sched;
+}
+
+
+private Scheduler scheduler;
 
 
 }

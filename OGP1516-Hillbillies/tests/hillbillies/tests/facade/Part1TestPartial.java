@@ -28,7 +28,7 @@ public class Part1TestPartial {
 		assertIntegerPositionEquals("A valid position should be accepted", 1, 2, 3, facade.getCubeCoordinate(unit));
 	}
 
-	private void assertIntegerPositionEquals(String message, int x, int y, int z, long[] cubeCoordinate) {
+	private void assertIntegerPositionEquals(String message, int x, int y, int z, int[] is) {
 		// TODO Auto-generated method stub
 		
 	}
